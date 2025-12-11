@@ -1,6 +1,9 @@
 🚀 CampaignOS: AI Automation Command Center
 A full-stack, low-code automation suite for B2B outreach. This project provides a modern dashboard interface to manage CSV leads, trigger AI-written cold emails (via Google Gemini), and deploy AI Voice Agents (via VAPI) for outbound calling—all powered by n8n workflows.
+### 🎥 Watch the Full Demo
+[![Watch the video](https://img.youtube.com/vi/SVX_wkqpb-c/maxresdefault.jpg)](https://youtu.be/SVX_wkqpb-c)
 ✨ Features
+
 ●📊 Data Ingestion: Upload CSV files, automatically creating a Google Sheet database.
 ●🧹 Data Validation: Auto-detects missing emails or phone numbers and flags them for manual review.
 ●📧 AI Email Agent: Uses Google Gemini to draft personalized, context-aware emails based on lead data and sends them via Gmail.
