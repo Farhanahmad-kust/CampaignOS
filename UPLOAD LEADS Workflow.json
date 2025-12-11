@@ -1,0 +1,532 @@
+{
+  "name": "UPLOAD LEADS Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "binaryPropertyName": "=file",
+        "options": {
+          "relaxQuotes": true,
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        16
+      ],
+      "id": "3441f1f0-987d-48d4-b333-f4033aa9f2e4",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3e42b1dc-96d3-404c-9c19-60041c37793e",
+              "name": "client_name",
+              "value": "={{ $('Webhook for lead upload').item.json.body.client_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        16
+      ],
+      "id": "0e331580-d28a-4365-8c19-7c1c0ebeba19",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Upload",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        16
+      ],
+      "id": "de93ca36-3e6f-4324-9589-77a12b9a12f5",
+      "name": "Webhook for lead upload",
+      "webhookId": "18ea6a65-0a03-42c2-86fc-435b9ae3205f"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "title": "={{ $('Webhook for lead upload').item.json.body.client_name }}_{{ $now.toFormat('MM-dd_HH-mm') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        16
+      ],
+      "id": "c4b1e564-e399-4c10-a6ff-fe7bdacddf7c",
+      "name": "Create sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID_HERE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create sheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create sheet').item.json.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "UID",
+              "displayName": "UID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_universal_name",
+              "displayName": "company_universal_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "profile_link",
+              "displayName": "profile_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_website",
+              "displayName": "company_website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employee_count_end",
+              "displayName": "employee_count_end",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "profile_link_public_identifier",
+              "displayName": "profile_link_public_identifier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email status",
+              "displayName": "Email status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Call status",
+              "displayName": "Call status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        32
+      ],
+      "id": "2be86f5b-d034-4aff-abde-895e28fcebb0",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID_HERE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        656,
+        32
+      ],
+      "id": "42662394-4c38-49c6-9a65-1f715a75014d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "789f409e-5f0e-4411-98fe-125392c239b7",
+              "name": "UID",
+              "value": "={{ $json.UID }}",
+              "type": "string"
+            },
+            {
+              "id": "54ed8e24-9e8d-4bb9-9627-12c0537fcd82",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "bed24a74-51ba-4bed-bf31-8c4725b146e4",
+              "name": "company_universal_name",
+              "value": "={{ $json.company_universal_name }}",
+              "type": "string"
+            },
+            {
+              "id": "ea7c5acf-b443-4a9c-b36a-484b00c3caef",
+              "name": "first_name",
+              "value": "={{ $json.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "c2481656-0b8c-4d01-99fb-5cab77fa1c4d",
+              "name": "last_name",
+              "value": "={{ $json.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "999abfd6-e6f4-4984-ad48-9662dc4d9207",
+              "name": "profile_link",
+              "value": "={{ $json.profile_link }}",
+              "type": "string"
+            },
+            {
+              "id": "7ef01e67-facb-4ff7-ba94-eb51b37f43c3",
+              "name": "job_title",
+              "value": "={{ $json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "17a44252-590a-4fe5-acb0-618c4adc5a28",
+              "name": "company_name",
+              "value": "={{ $json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d1750a32-9534-4310-9be9-1562c606a0c3",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "ef2d38de-bec5-488a-ade5-58ee0bc42e0e",
+              "name": "company_website",
+              "value": "={{ $json.company_website }}",
+              "type": "string"
+            },
+            {
+              "id": "77815461-55bd-4106-8bcd-bcfa1a41433c",
+              "name": "address",
+              "value": "={{ $json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "d189e631-53db-474f-b8ef-bb08458557e2",
+              "name": "employee_count_end",
+              "value": "={{ $json.employee_count_end }}",
+              "type": "string"
+            },
+            {
+              "id": "01a1bc3d-4348-4abc-99a8-ea4a0394bb58",
+              "name": "profile_link_public_identifier",
+              "value": "={{ $json.profile_link_public_identifier }}",
+              "type": "string"
+            },
+            {
+              "id": "708fe9d5-5f00-4d1b-9944-84a2e37871bf",
+              "name": "client_name",
+              "value": "={{ $json.client_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2fd837c1-c4e1-4ffd-8085-d0e908c11420",
+              "name": "Email status",
+              "value": "={{ $json['Email status'] }}",
+              "type": "string"
+            },
+            {
+              "id": "3632b4bc-02f1-4a1f-8e23-71ef715828ae",
+              "name": "Call status",
+              "value": "={{ $json['Call status'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        32
+      ],
+      "id": "cdb3ee55-2162-4952-8961-78eb0871ad70",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items;\n\n// Counters\nlet total = 0;\nlet emailCount = 0;\nlet phoneCount = 0;\nlet reviewCount = 0;\nlet reviewList = [];\n\n// Function to safely find a header, ignoring case variations\nfunction findHeaderValue(rowJson, possibleKeys) {\n    const keys = Object.keys(rowJson);\n    for (const key of keys) {\n        if (possibleKeys.includes(key.toLowerCase())) {\n            return rowJson[key];\n        }\n    }\n    return null;\n}\n\nfor (const row of rows) {\n    const json = row.json;\n    \n    // --- ROBUST MAPPING TO YOUR HEADERS ---\n    \n    // UID (Use this for the unique identifier)\n    const uid = findHeaderValue(json, ['uid']); \n    \n    // NAME (Checks for common variations like 'first_name', 'First Name', etc.)\n    const name = findHeaderValue(json, ['first_name', 'firstname', 'name']) || \"Unknown\";\n    const lastName = findHeaderValue(json, ['last_name', 'lastname']) || \"\";\n    \n    // COMPANY\n    const company = findHeaderValue(json, ['company_name', 'company', 'organization']) || \"Unknown\"; \n    \n    // EMAIL (Checks for 'email' and the specific 'UIDemail' just in case)\n    const email = findHeaderValue(json, ['email', 'uidemail', 'email_address']); \n    \n    // PHONE\n    const phone = findHeaderValue(json, ['phone', 'phone_number', 'phone_num']);\n    \n    total++;\n\n    let hasEmail = (email && String(email).includes('@'));\n    let hasPhone = (phone && String(phone).length > 5); // Check for minimal length\n    let missingFields = [];\n\n    // Check Email\n    if (hasEmail) emailCount++;\n    else missingFields.push(\"Email\");\n\n    // Check Phone\n    if (hasPhone) phoneCount++;\n    else missingFields.push(\"Phone\");\n\n    // Logic for \"Needs Review\"\n    if (!hasEmail || !hasPhone) {\n        reviewCount++;\n        \n        if (reviewList.length < 50) {\n            reviewList.push({\n                uid: uid,\n                name: name,\n                lastName: lastName,\n                company: company,\n                reason: missingFields.join(\" & \") + \" Missing\"\n            });\n        }\n    }\n}\n\n// Return stats and the list\nreturn [{\n  json: {\n    stats: {\n      total_leads: total,\n      email_count: emailCount,\n      phone_count: phoneCount,\n      review_count: reviewCount\n    },\n    review_leads: reviewList \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        32
+      ],
+      "id": "41f62690-e7dc-4121-b7f6-e47c31acec0d",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"sheet_id\": \"{{ $('Merge').first().json.sheetId }}\",\n  \"tab_name\": \"{{ $('Merge').first().json.title }}\",\n  \"stats\": {{ JSON.stringify($json.stats) }},\n  \"review_leads\": {{ JSON.stringify($json.review_leads) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1536,
+        32
+      ],
+      "id": "c562849e-be5f-4591-94c3-b3a0526beceb",
+      "name": "Respond to Webhook3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Create sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook for lead upload": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fac71db4-b5bd-4cac-a507-ed0449d40b9c",
+  "meta": {
+    "instanceId": "23035e57eabb192af9937572a1c63e2e1b7ded7a6700a9817cffb727cdb33706"
+  },
+  "id": "xhrThzQKnmkXuMRh",
+  "tags": []
+}

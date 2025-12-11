@@ -1,0 +1,636 @@
+{
+  "name": "Make Call wokflow",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QwvQLVKfIiVmOfU0soPsZoiW6nH_6QCp3eRcYYImreQ",
+          "mode": "list",
+          "cachedResultName": "Leads database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QwvQLVKfIiVmOfU0soPsZoiW6nH_6QCp3eRcYYImreQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.body.tab_name }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -512,
+        16
+      ],
+      "id": "26de68a4-b2e4-44c7-9713-56c39773193d",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "x7Rb8Hv6QiC7xqSr",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e37eed31-08ce-41a1-88c6-9612af87212e",
+              "name": "first_name",
+              "value": "={{ $json.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "bb16453a-3938-4114-b397-6e7c27e5557f",
+              "name": "company_universal_name",
+              "value": "={{ $json.company_universal_name }}",
+              "type": "string"
+            },
+            {
+              "id": "58923c32-6348-4e1d-b714-15f1d1acfee0",
+              "name": "job_title",
+              "value": "={{ $json.job_title }}",
+              "type": "string"
+            },
+            {
+              "id": "909533d0-2cd8-46ab-937f-4890b09f731b",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9883ca7c-9392-4289-b8f7-364bd5e6cb29",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assistantId\": \"91328593-6517-4c28-83da-3dc1c9eb8bdb\",\n  \"phoneNumberId\": \"b9eacf3e-4c07-4da1-b980-7f3e2ed9f19a\",\n  \"customer\": {\n    \"number\": \"{{ $json.clean_phone_e164 }}\"\n  },\n  \"assistantOverrides\": {\n    \"serverUrl\": \"https://farhan44.app.n8n.cloud/webhook-test/Callinitated\",\n    \"metadata\": {\n      \"row_number\": \"{{ $json.phone }}\"\n    },\n    \"maxDurationSeconds\": 240,\n    \"voicemailDetection\": {\n      \"provider\": \"vapi\"\n    },\n    \"firstMessage\": \"Hello?\", \n    \"variableValues\": {\n      \"first_name\": \"{{ $json.first_name }}\",\n      \"company_universal_name\": \"{{ $json.company_universal_name }}\",\n      \"job_title\": \"{{ $json.job_title }}\"\n    },\n    \"model\": {\n      \"provider\": \"openai\",\n      \"model\": \"gpt-4o\",\n      \"messages\": [\n        {\n          \"role\": \"system\",\n          \"content\": \"You are a professional Senior Business Developer for 'Team13 Automation'. Your goal is to qualify the lead and book a follow-up conversation. You are speaking to {{ $json.first_name }}. YOUR BEHAVIOR AND TONE RULES: 1. PROFESSIONALISM: Speak in a calm, consultative manner. DO NOT BEGIN SPEAKING until you hear the prospect's voice in response to your 'Hello?'. 2. PACING: Responses should naturally mirror the user's input—do not interrupt the prospect. Allow 1-2 seconds of silence after the prospect speaks to ensure they are finished. 3. IDENTITY FLOW: Your first spoken turn MUST contain the name confirmation and company introduction. CONVERSATION FLOW (Follow this strictly): STEP 1: CONFIRMATION & INTRO (This is the AI's first response after the prospect speaks) - If the user says anything (e.g., 'Yes', 'Who is this?', 'Hello?'), respond with: 'Hi {{ $json.first_name }}. I'm calling from Team13 Automation. We build custom smart workflows to help {{ $json.company_universal_name }} reduce manual tasks.' - Transition with: 'Does your team currently spend a lot of time on tasks like data entry, reporting, or managing customer emails?' STEP 2: QUALIFICATION & GRACEFUL EXIT (CRUCIAL) - POSITIVE RESPONSE: Acknowledge their pain, ask for specific examples ('What kind of tasks are taking up the most time?'). If positive, continue for up to 3 minutes to confirm suitability before asking for a demo. - NEGATIVE RESPONSE: THANK THEM POLITELY for their time and immediately END THE CALL. Do NOT push. STEP 3: THE CLOSE - After 2-3 minutes of positive qualification, suggest: 'It sounds like we could help you save significant time. Would you be open to a quick 15-minute call with a human specialist next week to see a specific example of how this works?'\"\n        }\n      ]\n    },\n    \"analysisPlan\": {\n      \"summaryPrompt\": \"Provide a 4-6 sentence summary covering: 1. Prospect name verification, 2. The primary pain point mentioned (e.g., manual emails/reporting), 3. Whether they agreed to a follow-up, and 4. The overall conversation tone (e.g., positive/rushed).\",\n      \"successEvaluationPrompt\": \"Did the user confirm they spend time on manual tasks AND express interest in a follow-up meeting? Return true if both conditions are met, otherwise false.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        544,
+        16
+      ],
+      "id": "56e30dd9-006c-4c94-8042-25fc709e0614",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "tMssvRwrDNaehWOQ",
+          "name": "Vapi f"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        176,
+        0
+      ],
+      "id": "09c6a33b-72ec-49a3-a946-f7cd6241f5c6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1QwvQLVKfIiVmOfU0soPsZoiW6nH_6QCp3eRcYYImreQ",
+          "mode": "list",
+          "cachedResultName": "Leads database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QwvQLVKfIiVmOfU0soPsZoiW6nH_6QCp3eRcYYImreQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('webhook for call').item.json.body.tab_name }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "UID": "={{ $('Get row(s) in sheet').item.json.UID }}",
+            "Call status": "=Called"
+          },
+          "matchingColumns": [
+            "UID"
+          ],
+          "schema": [
+            {
+              "id": "UID",
+              "displayName": "UID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_universal_name",
+              "displayName": "company_universal_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "profile_link",
+              "displayName": "profile_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_website",
+              "displayName": "company_website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employee_count_end",
+              "displayName": "employee_count_end",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "profile_link_public_identifier",
+              "displayName": "profile_link_public_identifier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email status",
+              "displayName": "Email status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Call status",
+              "displayName": "Call status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        16
+      ],
+      "id": "565dfa91-700d-48e5-b887-db0a1c49bb5c",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "x7Rb8Hv6QiC7xqSr",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Call",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        16
+      ],
+      "id": "d0c6144f-dad8-4eab-9355-05adba07c057",
+      "name": "webhook for call",
+      "webhookId": "06ccc20d-562c-465a-a515-33dabc390ebf"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QwvQLVKfIiVmOfU0soPsZoiW6nH_6QCp3eRcYYImreQ",
+          "mode": "list",
+          "cachedResultName": "USA Lead Generation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QwvQLVKfIiVmOfU0soPsZoiW6nH_6QCp3eRcYYImreQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('webhook for call').item.json.body.tab_name }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        928,
+        16
+      ],
+      "id": "e7653eb3-7544-4994-9b70-cc1f7b89b574",
+      "name": "Get row(s) in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "x7Rb8Hv6QiC7xqSr",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the data from the previous node (Google Sheets - Get Many Rows)\nconst rows = items;\n\n// 2. Initialize counters and LISTS\nlet callSent = 0;\nlet callPending = 0;\nlet emailSent = 0;\nlet emailPending = 0;\nlet pendingCallList = []; // NEW: List to hold pending call data\n\n// Function to safely normalize status strings\nfunction normalizeStatus(status) {\n    if (status) {\n        return String(status).trim().toLowerCase();\n    }\n    return null;\n}\n\n// Function to safely find status value, checking common header variations\nfunction findStatusValue(rowJson, possibleKeys) {\n    const keys = Object.keys(rowJson);\n    for (const key of keys) {\n        if (possibleKeys.includes(key.trim().toLowerCase())) {\n            return rowJson[key];\n        }\n    }\n    return null;\n}\n\n\n// 3. Loop through every row\nfor (const row of rows) {\n    const json = row.json;\n    \n    // --- Data Retrieval (Ensure these match the full headers) ---\n    // Note: You need to retrieve Name/Company/Phone to populate the list\n    const name = findStatusValue(json, ['first_name', 'name']) || \"N/A\";\n    const company = findStatusValue(json, ['company_name', 'company']) || \"N/A\";\n    const phone = findStatusValue(json, ['phone', 'phone_number']);\n    \n    const rawCallStatus = findStatusValue(json, ['call status', 'phone status']);\n    const rawEmailStatus = findStatusValue(json, ['email status']);\n\n    // Normalize the status values\n    const callStatus = normalizeStatus(rawCallStatus);\n    const emailStatus = normalizeStatus(rawEmailStatus);\n\n\n    // --- COUNT CALLS ---\n    if (callStatus === 'called') {\n        callSent++;\n    } else {\n        // Only count as pending if the lead has a phone number\n        if (phone && String(phone).replace(/\\D/g, '').length >= 10) {\n            callPending++;\n            \n            // NEW: Add lead to the list if pending (max 50 items)\n            if (pendingCallList.length < 50) {\n                pendingCallList.push({\n                    name: name,\n                    company: company,\n                    phone: phone\n                });\n            }\n        }\n    }\n\n    // --- COUNT EMAILS (Kept for dashboard sync) ---\n    if (emailStatus === 'sent') {\n        emailSent++;\n    } else {\n        emailPending++;\n    }\n}\n\n// 4. Return the data structure your website expects\nreturn [{\n    json: {\n        stats: {\n            call_sent: callSent,\n            call_pending: callPending,\n            email_sent: emailSent,\n            email_pending: emailPending\n        },\n        pending_calls: pendingCallList // NEW: Return the list of leads\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        16
+      ],
+      "id": "e7fb1b62-1fe3-481e-bf0d-fa8088a01b10",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"stats\": {{ JSON.stringify($json.stats) }},\n  \"pending_calls\": {{ JSON.stringify($json.pending_calls) }}\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1376,
+        32
+      ],
+      "id": "2124e36b-7bd1-477b-9321-74012017350d",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "69e89658-697d-41c5-b32a-557322c830e5",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "53800aed-ea39-425b-9f15-bd742517745f",
+              "leftValue": "={{ $json['Call status'] }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "14b8097c-b2bf-470d-a011-3f3ce8fc28ed",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the phone number from the previous node's output\nconst rawNumber = items[0].json.phone;\n\n// Clean and format the number to E.164 (e.g., +1234567890)\n// This removes non-digits, ensures it's 10 digits, and adds +1 prefix.\nlet cleanNumber = null;\n\nif (rawNumber) {\n    // 1. Convert to string and remove all non-digit characters\n    const digitsOnly = String(rawNumber).replace(/\\D/g, '');\n\n    // 2. Take the last 10 digits (assuming US/Canada numbers)\n    const tenDigits = digitsOnly.slice(-10);\n\n    // 3. Format to E.164\n    cleanNumber = `+1${tenDigits}`;\n}\n\n// Check if the number is valid before returning\nif (cleanNumber && cleanNumber.length === 12) {\n    return [{\n        json: {\n            // Pass all original data PLUS the clean number\n            ...items[0].json,\n            clean_phone_e164: cleanNumber\n        }\n    }];\n} else {\n    // Fail gracefully if the number is missing or invalid\n    throw new Error(\"Phone number is invalid or missing in the lead data.\");\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        16
+      ],
+      "id": "da2d26e3-854f-4962-bb5b-20bbfff93909",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "webhook for call": [
+      {
+        "json": {
+          "headers": {
+            "host": "farhan44.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+            "content-length": "72",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2401:ba80:a109:6552:fc4b:4084:b0c9:9225",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "PK",
+            "cf-ray": "9ac519ccb0bcfd6c-SIN",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "null",
+            "priority": "u=1, i",
+            "sec-ch-ua": "\"Google Chrome\";v=\"125\", \"Chromium\";v=\"125\", \"Not.A/Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2401:ba80:a109:6552:fc4b:4084:b0c9:9225, 172.70.208.4",
+            "x-forwarded-host": "farhan44.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-8-86454fd949-6mgq4",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2401:ba80:a109:6552:fc4b:4084:b0c9:9225"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sheet_id": "449037532",
+            "tab_name": "Farhan_12-11_17-46",
+            "action": "call"
+          },
+          "webhookUrl": "https://farhan44.app.n8n.cloud/webhook-test/Call",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "webhook for call": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3573f0db-13fc-4e02-b1a9-df328ba710ce",
+  "meta": {
+    "instanceId": "23035e57eabb192af9937572a1c63e2e1b7ded7a6700a9817cffb727cdb33706"
+  },
+  "id": "9vK658uzVH3cCVnI",
+  "tags": []
+}
