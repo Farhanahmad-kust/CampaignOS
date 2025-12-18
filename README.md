@@ -1,121 +1,121 @@
-# 🚀 CampaignOS: AI Automation Command Center
+# 🚀 CampaignOS | AI Sales Command Center
 
-**A full-stack, low-code automation suite for B2B outreach.**
-This project provides a modern dashboard interface to manage CSV leads, trigger AI-written cold emails (via Google Gemini), and deploy AI Voice Agents (via VAPI) for outbound calling—all powered by **n8n workflows**.
+![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Status](https://img.shields.io/badge/status-active-success) ![License](https://img.shields.io/badge/license-MIT-purple)
 
-### 🎥 Watch the Full Demo
-[![Watch the video](https://img.youtube.com/vi/SVX_wkqpb-c/maxresdefault.jpg)](https://youtu.be/SVX_wkqpb-c)
+**CampaignOS** is a fully automated, end-to-end sales orchestration platform. It replaces manual lead management with an AI-powered ecosystem that ingests data, cleans records, and launches personalized **Email** and **Voice** campaigns autonomously.
 
----
-
-## ✨ Features
-
-* **📊 Data Ingestion:** Upload CSV files, automatically creating a Google Sheet database.
-* **🧹 Data Validation:** Auto-detects missing emails or phone numbers and flags them for manual review.
-* **📧 AI Email Agent:** Uses Google Gemini to draft personalized, context-aware emails based on lead data and sends them via Gmail.
-* **📞 AI Voice Agent:** Deploys VAPI (GPT-4o) voice assistants to conduct outbound discovery calls.
-* **⚡ Real-Time Dashboard:** Live status updates using a Single Page Application (SPA) architecture with no external database required.
+> **Problem Solved:** Sales teams spend 80% of their time on data entry and manual dialing. CampaignOS automates the "robot work" so humans can focus on closing deals.
 
 ---
 
-## 🏗️ Architecture
+## 📺 Project Demo
 
-* **Frontend:** HTML5, CSS3 (Inter font), Vanilla JavaScript (Fetch API).
-* **Backend / Orchestration:** n8n (3 Synchronous Workflows).
-* **Database:** Google Sheets.
-* **AI Services:**
-    * **Text Generation:** Google Gemini (PaLM).
-    * **Voice/Telephony:** VAPI.ai + Twilio.
-* **Email Service:** Gmail (via OAuth2).
+[![Watch the Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE)
+*(Click above to watch the 2-minute walkthrough)*
 
 ---
 
-## 📦 Repository Structure
+## ✨ Key Features
 
-```text
-├── workflows/
-│   ├── 1_Upload_Leads_Workflow.json      # Handles CSV parsing & Sheet creation
-│   ├── 2_Send_Email_Workflow.json        # AI writing & Gmail sending
-│   └── 3_Make_Call_Workflow.json         # Phone formatting & VAPI triggering
-├── website/
-│   └── index.html                        # The main dashboard interface
-└── README.md
+### 1. 📂 Intelligent Data Ingestion
+* **Drag-and-Drop Upload:** Instantly process raw CSV lead files.
+* **Auto-Analysis:** Backend workflows analyze data quality in real-time.
+* **Stats Dashboard:** Immediate visualization of actionable vs. incomplete leads.
 
-⚙️ Prerequisites
-Before installing, ensure you have:
+### 2. 🧹 Data Cleaning Workspace
+* **Interactive Grid:** Edit missing fields (Phone, Email, Job Title) directly in the UI.
+* **Instant Sync:** Updates are pushed to the Supabase database via webhooks immediately upon saving.
 
-n8n Instance: Self-hosted or n8n Cloud (Active account).
+### 3. ✉️ AI Email Agent
+* **Personalization Engine:** Uses **GPT-4o** to generate unique, context-aware emails for each lead.
+* **Bulk Orchestrator:** Send single emails or trigger batch campaigns (e.g., 50 leads at once).
+* **Live Tracking:** Dashboard updates instantly when emails are sent.
 
-VAPI Account: You need your Private API Key, an Assistant ID, and a Phone Number ID.
+### 4. 📞 Neural Voice Agent
+* **Vapi Integration:** Triggers ultra-realistic AI voice calls that handle objections in real-time.
+* **Smart Queuing:** Bulk dialer manages call pacing to prevent spam flagging.
+* **Instant Intelligence:** Call transcripts and AI summaries sync back to the dashboard immediately after the call ends.
 
-Google Cloud Project: Enabled APIs for Google Sheets and Gmail.
+---
 
-Google AI Studio: An API Key for Gemini.
+## 🛠️ Technical Architecture
 
-🚀 Installation & Setup
-Phase 1: n8n Configuration
-Import Workflows:
+This project utilizes a **Serverless / Low-Code** architecture for maximum scalability and low maintenance.
 
-Download the JSON files from the workflows/ folder.
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | HTML5, CSS3, JS | Custom dashboard with **Chart.js** for real-time analytics. |
+| **Backend Logic** | **n8n** | 6 complex workflows handling routing, logic, and API calls. |
+| **Database** | **Supabase** | PostgreSQL database for storing leads and campaign state. |
+| **Voice AI** | **Vapi.ai** | Orchestrates the conversational AI for phone calls. |
+| **LLM** | **OpenAI GPT-4o** | Generates email copy and conversation logic. |
+| **Telephony** | **Twilio** | SIP trunking for outbound dialing. |
 
-In n8n, go to Menu > Import from File and import all three.
+### 🔄 The 6 Core Workflows
+1.  **Ingestion:** CSV parsing & DB insertion.
+2.  **Update Loop:** Handling user edits from the dashboard.
+3.  **Get Leads:** Fetching filtered lists (Email vs. Phone) for the UI.
+4.  **Email Dispatch:** GPT-4 generation & Gmail/SMTP sending.
+5.  **Voice Dispatch:** Vapi trigger & Bulk batching.
+6.  **Result Sync:** Webhook listener for call transcripts/summaries.
 
-Configure Credentials:
+---
 
-Google Sheets & Gmail: Set up OAuth2 credentials in n8n nodes.
+## 👥 The Team
 
-Google Gemini: Add your API Key to the Gemini Chat Model node.
+This project was a collaborative effort combining technical implementation with industry insights.
 
-VAPI: In Workflow 3 ("Make Call"), open the HTTP Request node and add a Header Auth credential (Authorization: Bearer YOUR_SECRET_KEY).
+* **Farhan Ahmad (Lead Developer):**
+    * Role: Full Stack Development, Architecture, & Deployment.
+    * Contribution: Built all 6 n8n workflows, designed the Supabase schema, coded the frontend dashboard, and integrated the AI agents (Vapi/OpenAI).
+* **Basit Ali:**
+    * Role: Technical Team Member.
+* **Nahida Ali:**
+    * Role: Freelance Associate.
+    * Contribution: Project strategy and use-case definition.
+* **Engr. Rizwan:**
+    * Role: Freelance Associate.
+    * Contribution: Sales workflow insights.
 
-Update Hardcoded IDs (Crucial):
+---
 
-Workflow 3 (Call): Open the HTTP Request node. inside the JSON Body, replace YOUR_ASSISTANT_ID_HERE and YOUR_PHONE_NUMBER_ID_HERE with your actual IDs from the VAPI Dashboard.
+## 💰 Cost Analysis
 
-Activate Workflows:
+We have prepared a detailed breakdown of the Operational Costs (OpEx) and Development Value (CapEx) for this system.
 
-Toggle the Active switch to Green (On) for ALL three workflows. This generates your Production Webhook URLs.
+📄 **[View Full Cost Estimation Document](./COST_ESTIMATION.md)**
 
-Phase 2: Website Configuration
-Open the website/index.html file in any code editor (VS Code, Notepad).
+**Quick Summary:**
+* **Fixed Monthly Cost:** ~$31.15 (n8n + Twilio)
+* **Voice Cost:** ~$0.12 per minute (90% cheaper than human SDRs)
+* **Email Cost:** ~$0.0002 per email
 
-Locate the WEBHOOKS constant near the bottom of the script (approx line 220).
+---
 
-Replace the placeholder URLs with your Production Webhook URLs from n8n:
+## 🚀 Getting Started
 
-JavaScript
+### Prerequisites
+* [n8n](https://n8n.io/) (Self-hosted or Cloud)
+* [Supabase](https://supabase.com/) Account
+* [Vapi.ai](https://vapi.ai/) Account
+* [OpenAI](https://openai.com/) API Key
 
-const WEBHOOKS = {
-    upload: "https://your-n8n-instance/webhook/Upload",
-    email: "https://your-n8n-instance/webhook/SendEmail",
-    call: "https://your-n8n-instance/webhook/Call"
-};
-Save the file.
+### Installation
+1.  **Clone the Repo:**
+    ```bash
+    git clone [https://github.com/yourusername/CampaignOS.git](https://github.com/yourusername/CampaignOS.git)
+    ```
+2.  **Import Workflows:**
+    * Import the `.json` workflow files located in the `/workflows` folder into your n8n instance.
+3.  **Setup Database:**
+    * Run the SQL script in `/database/schema.sql` in your Supabase SQL editor.
+4.  **Configure Environment:**
+    * Update the `index.html` file to point to your specific n8n Webhook URLs.
+5.  **Run:**
+    * Open `index.html` in any browser. No build step required!
 
-📖 Usage Guide
-Launch: Open index.html in your browser (Chrome/Edge recommended).
+---
 
-Upload:
+## 📄 License
 
-Enter a Campaign Name (e.g., "Tech Leads Q4").
-
-Select a CSV file containing columns like first_name, company_name, email, phone.
-
-Click Upload. Wait for the "Needs Review" table to populate.
-
-Email Campaign:
-
-Navigate to the Email Campaign tab.
-
-Click Start Campaign. The system will send an email to the next pending lead and update the stats instantly.
-
-Voice Agent:
-
-Navigate to the Voice Agent tab.
-
-Click Initiate Dialing. The system will trigger VAPI to call the next valid number.
-
-📄 License
-This project is open-source. Feel free to modify and distribute.
-
-Built with ❤️ using n8n and AI.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
