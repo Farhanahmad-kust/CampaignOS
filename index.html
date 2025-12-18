@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampaignOS | Command Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         /* --- DESIGN SYSTEM --- */
@@ -22,7 +23,6 @@
             --warning: #f59e0b;
             --danger: #ef4444;
             --radius: 12px;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         * { box-sizing: border-box; outline: none; }
@@ -44,7 +44,6 @@
         .menu-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
         .menu-item:hover { background-color: var(--sidebar-hover); color: white; }
         .menu-item.active { background-color: var(--accent); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-        .menu-item svg { width: 18px; height: 18px; }
         .locked { opacity: 0.4; pointer-events: none; }
         .unlocked { opacity: 1; pointer-events: auto; animation: unlockPulse 0.5s ease; }
 
@@ -58,11 +57,31 @@
         .view-section { display: none; max-width: 1000px; margin: 0 auto; animation: fadeUp 0.4s ease-out; }
         .view-section.active { display: block; }
 
-        /* --- DASHBOARD CARDS --- */
+        /* --- DASHBOARD CARDS & CHARTS --- */
         .dashboard-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .analytics-container {
+            display: grid; 
+            grid-template-columns: 1.5fr 1fr; 
+            gap: 20px; 
+            margin-bottom: 24px;
+        }
+        
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; }
         .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; }
         .stat-number { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chart-wrapper { height: 120px; width: 120px; }
+        .chart-legend { flex: 1; padding-left: 20px; }
 
         /* --- ACTION CONTAINER --- */
         .action-container { background: var(--card-bg); padding: 32px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; }
@@ -72,20 +91,47 @@
         label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
         input[type="text"], input[type="file"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: #fdfdfd; font-size: 14px; font-family: 'Inter', sans-serif; }
         
-        /* --- DATA TABLE STYLES --- */
-        .table-container { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; margin-top: 24px; }
-        .table-header { padding: 20px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
+        /* --- TABLE STYLES --- */
+        .table-container { 
+            background: var(--card-bg); 
+            border-radius: 16px; 
+            border: 1px solid var(--border); 
+            margin-top: 24px; 
+            overflow-x: auto; 
+            white-space: nowrap; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        
+        .table-header { 
+            padding: 20px; 
+            border-bottom: 1px solid var(--border); 
+            background: #f8fafc; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; 
+            left: 0; 
+        }
+        
         .table-title { font-weight: 600; font-size: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1100px; }
         th { text-align: left; padding: 16px 24px; color: var(--text-secondary); font-weight: 500; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 16px 24px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
-        tr:last-child td { border-bottom: none; }
+        td { padding: 16px 24px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; }
         tr:hover { background-color: #f8fafc; }
 
-        .status-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-        .badge-warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-        .badge-ready { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        /* --- UI ELEMENTS --- */
+        .edit-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; width: 150px; font-size: 13px; transition: 0.2s; }
+        .edit-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        .email-input { width: 200px; }
+
+        .status-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-pending { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        .badge-sent { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .badge-called { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+
+        .bulk-controls { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+        .bulk-input { width: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
 
         /* BUTTONS */
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
@@ -93,33 +139,47 @@
         .btn-primary:hover { background: var(--accent-hover); }
         .btn-danger { background: var(--danger); color: white; }
         .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-outline { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; width: auto; }
+        .btn-outline:hover { background: #e2e8f0; }
+
+        .btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; background: var(--accent); color: white; transition: 0.2s; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-sm:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-sm:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+
         .status-msg { margin-top: 16px; text-align: center; font-size: 13px; font-weight: 500; }
 
+        /* --- MODAL FOR TRANSCRIPT --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(2px);
+        }
+        .modal-card {
+            background: white; width: 600px; max-width: 90%;
+            border-radius: 16px; padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { cursor: pointer; font-size: 24px; color: #64748b; }
+        .modal-body { overflow-y: auto; flex: 1; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-wrap; }
+        .summary-box { background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; }
+
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes unlockPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        @keyframes unlockPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <nav class="sidebar">
-        <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> CampaignOS</div>
+        <div class="logo">CampaignOS</div>
         <div class="nav-links">
-            <div class="menu-item active" id="nav-upload" onclick="switchView('upload')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Data Source
-            </div>
-            <div class="menu-item locked" id="nav-email" onclick="switchView('email')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Email Campaign
-            </div>
-            <div class="menu-item locked" id="nav-call" onclick="switchView('call')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Voice Agent
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <div class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings
-            </div>
-            <div class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Help & FAQ
-            </div>
+            <div class="menu-item active" id="nav-upload" onclick="switchView('upload')">Data Source</div>
+            <div class="menu-item locked" id="nav-data" onclick="switchView('data')">Input Missing Data</div>
+            <div class="menu-item locked" id="nav-email" onclick="switchView('email')">Email Campaign</div>
+            <div class="menu-item locked" id="nav-call" onclick="switchView('call')">Voice Agent</div>
         </div>
     </nav>
 
@@ -136,117 +196,204 @@
             <div id="view-upload" class="view-section active">
                 <div class="dashboard-row" id="stats-area" style="display: none;">
                     <div class="stat-card"><div class="stat-label">Total Leads</div><div class="stat-number" id="stat-total">0</div></div>
-                    <div class="stat-card"><div class="stat-label">Valid Email</div><div class="stat-number" id="stat-email">0</div></div>
-                    <div class="stat-card"><div class="stat-label">Valid Phone</div><div class="stat-number" id="stat-phone">0</div></div>
-                    <div class="stat-card" style="border-left: 3px solid #f59e0b;"><div class="stat-label">Needs Review</div><div class="stat-number" id="stat-review" style="color: #d97706;">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Actionable Emails</div><div class="stat-number" id="stat-email" style="color: var(--accent);">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Actionable Phones</div><div class="stat-number" id="stat-phone" style="color: var(--success);">0</div></div>
+                    <div class="stat-card" style="border-left: 3px solid #ef4444;"><div class="stat-label">Incomplete Data</div><div class="stat-number" id="stat-review" style="color: #ef4444;">0</div></div>
                 </div>
 
                 <div class="action-container">
                     <h1>Data Ingestion</h1>
-                    <p class="subtitle">Upload your CSV. The AI will clean and validate contact info.</p>
+                    <p class="subtitle">Upload your CSV. We will save ALL leads. Incomplete leads can be fixed in the next tab.</p>
                     <div class="input-group"><label>Campaign Name</label><input type="text" id="clientName" placeholder="e.g. Q4 Outreach"></div>
                     <div class="input-group"><label>CSV File</label><input type="file" id="leadFile" accept=".csv"></div>
                     <button class="btn btn-primary" onclick="handleUpload()" id="uploadBtn">Upload & Analyze Data</button>
                     <div class="status-msg" id="uploadStatus"></div>
                 </div>
+            </div>
 
-                <div id="review-table-area" class="table-container" style="display: none;">
+            <div id="view-data" class="view-section">
+                <div class="dashboard-row">
+                    <div class="stat-card" style="border-left: 4px solid #ef4444;">
+                        <div class="stat-label">Leads with Missing Data</div>
+                        <div class="stat-number" id="clean-missing" style="color: #ef4444;">0</div>
+                    </div>
+                    <div class="stat-card" style="border-left: 4px solid #10b981;">
+                        <div class="stat-label">Updated Leads (Session)</div>
+                        <div class="stat-number" id="clean-fixed" style="color: #10b981;">0</div>
+                    </div>
+                </div>
+
+                <div class="action-container" style="border-top: 4px solid #f59e0b;">
+                    <h1>Data Cleaning Workspace</h1>
+                    <p class="subtitle">Enrich your campaign data. All fields (including Email) are now editable.</p>
+                    <button class="btn btn-outline" onclick="loadBadLeads()" id="loadLeadsBtn">Load Incomplete Leads</button>
+                </div>
+
+                <div id="review-table-area" class="table-container">
                     <div class="table-header">
-                        <div class="table-title">
-                            <span style="color: #d97706;">⚠️</span> Leads Requiring Attention
-                        </div>
-                        <span style="font-size: 12px; color: #64748b;">Showing top 50 flagged leads</span>
+                        <div class="table-title"><span style="color: #ef4444;">⚠️</span> Incomplete Leads</div>
+                        <span style="font-size: 12px; color: #64748b;">Top 100</span>
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>UID</th>
-                                <th>Name</th>
+                                <th style="min-width: 150px;">Name</th>
+                                <th style="min-width: 220px;">Email</th>
+                                <th>Phone</th>
                                 <th>Company</th>
-                                <th>Issue Detected</th>
-                                <th>Action</th>
+                                <th>Job Title</th>
+                                <th>Website</th>
+                                <th>LinkedIn</th>
+                                <th style="min-width: 100px;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="review-table-body">
+                            <tr><td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">Click "Load Incomplete Leads" to start working.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div id="view-email" class="view-section">
-                <div class="dashboard-row">
-                    <div class="stat-card"><div class="stat-label">Total Targets</div><div class="stat-number" id="email-total">0</div></div>
-                    <div class="stat-card"><div class="stat-label">Emails Sent</div><div class="stat-number" id="email-sent" style="color: var(--success);">0</div></div>
-                    <div class="stat-card"><div class="stat-label">Queue Pending</div><div class="stat-number" id="email-pending">0</div></div>
-                    <div class="stat-card" style="border-style: dashed;"><div class="stat-label">Open Rate</div><div class="stat-number" style="color: #cbd5e1;">--</div></div>
-                </div>
                 
+                <div class="analytics-container">
+                    <div class="dashboard-row" style="margin-bottom: 0;">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Valid Emails</div>
+                            <div class="stat-number" id="email-view-total">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Pending Emails</div>
+                            <div class="stat-number" id="email-view-pending" style="color: var(--warning);">0</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #10b981;">
+                            <div class="stat-label">Emails Sent</div>
+                            <div class="stat-number" id="email-view-sent" style="color: var(--success);">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div style="flex: 1;">
+                            <div class="stat-label">Campaign Progress</div>
+                            <div style="font-size: 13px; color: #64748b;">Real-time visualization</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-email"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="action-container">
-                    <h1>Email Sequence</h1>
-                    <p class="subtitle">Execute the AI-driven email workflow. Updates in real-time.</p>
-                    <button class="btn btn-primary" onclick="triggerWorkflow('email')" id="btn-email-trigger">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        Start Campaign
-                    </button>
+                    <h1>Email Campaign Manager</h1>
+                    <p class="subtitle">Send individual emails or trigger a bulk blast to random pending leads.</p>
+                    
+                    <div style="display: flex; gap: 16px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label>Bulk Batch Size</label>
+                            <div class="bulk-controls">
+                                <input type="number" id="email-bulk-size" class="bulk-input" value="5" min="1" max="50">
+                                <button class="btn btn-primary" onclick="sendBulkEmails()" id="btn-email-bulk">
+                                    Send Bulk Email
+                                </button>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                             <button class="btn btn-outline" onclick="fetchEmailLeads()">Refresh List</button>
+                        </div>
+                    </div>
                     <div class="status-msg" id="emailStatus"></div>
                 </div>
-                
-                <div id="pending-email-table-area" class="table-container" style="display: none;">
+
+                <div class="table-container">
                     <div class="table-header">
-                        <div class="table-title">
-                            <span style="color: var(--accent);">🎯</span> Pending Leads in Queue
-                        </div>
-                        <span style="font-size: 12px; color: #64748b;">Showing next 50 leads to be contacted</span>
+                        <div class="table-title"><span style="color: var(--accent);">📧</span> Valid Email Leads</div>
+                        <span style="font-size: 12px; color: #64748b;">Ready for outreach</span>
                     </div>
                     <table>
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Company</th>
                                 <th>Email</th>
+                                <th>Company</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="pending-email-table-body">
+                        <tbody id="email-table-body">
+                            <tr><td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">Loading leads...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div id="view-call" class="view-section">
-                <div class="dashboard-row">
-                    <div class="stat-card"><div class="stat-label">Total Targets</div><div class="stat-number" id="call-total">0</div></div>
-                    <div class="stat-card"><div class="stat-label">Calls Completed</div><div class="stat-number" id="call-sent" style="color: var(--success);">0</div></div>
-                    <div class="stat-card"><div class="stat-label">To Dial</div><div class="stat-number" id="call-pending">0</div></div>
-                    <div class="stat-card" style="border-style: dashed;"><div class="stat-label">Avg Duration</div><div class="stat-number" style="color: #cbd5e1;">--</div></div>
+                
+                <div class="analytics-container">
+                    <div class="dashboard-row" style="margin-bottom: 0;">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Valid Phones</div>
+                            <div class="stat-number" id="call-view-total">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Pending Calls</div>
+                            <div class="stat-number" id="call-view-pending" style="color: var(--warning);">0</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #0ea5e9;">
+                            <div class="stat-label">Calls Initiated</div>
+                            <div class="stat-number" id="call-view-sent" style="color: #0ea5e9;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div style="flex: 1;">
+                            <div class="stat-label">Dialer Status</div>
+                            <div style="font-size: 13px; color: #64748b;">Voice Agent Activity</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-call"></canvas>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="action-container">
-                    <h1>Voice Agent</h1>
-                    <p class="subtitle">Deploy the VAPI/Twilio agent to dial pending leads.</p>
-                    <button class="btn btn-danger" onclick="triggerWorkflow('call')" id="btn-call-trigger">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        Initiate Dialing
-                    </button>
+                    <h1>Voice Agent Manager</h1>
+                    <p class="subtitle">Trigger AI voice calls. Ensure your Vapi agent is active.</p>
+                    
+                    <div style="display: flex; gap: 16px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label>Bulk Batch Size</label>
+                            <div class="bulk-controls">
+                                <input type="number" id="call-bulk-size" class="bulk-input" value="5" min="1" max="20">
+                                <button class="btn btn-danger" onclick="sendBulkCalls()" id="btn-call-bulk">
+                                    Start Bulk Dialer
+                                </button>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                             <button class="btn btn-outline" onclick="fetchCallLeads()">Refresh List</button>
+                        </div>
+                    </div>
                     <div class="status-msg" id="callStatus"></div>
                 </div>
-                 <div id="pending-call-table-area" class="table-container" style="display: none;">
+
+                <div class="table-container">
                     <div class="table-header">
-                        <div class="table-title">
-                            <span style="color: var(--danger);">📞</span> Numbers in Dial Queue
-                        </div>
-                        <span style="font-size: 12px; color: #64748b;">Showing next 50 numbers to be dialed</span>
+                        <div class="table-title"><span style="color: #ef4444;">📞</span> Valid Phone Leads</div>
+                        <span style="font-size: 12px; color: #64748b;">Ready to dial</span>
                     </div>
                     <table>
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Company</th>
                                 <th>Phone</th>
+                                <th>Company</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="pending-call-table-body">
-                            </tbody>
+                        <tbody id="call-table-body">
+                            <tr><td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">Loading leads...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -254,14 +401,37 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="transcript-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">Call Details</div>
+                <div class="modal-close" onclick="closeModal()">×</div>
+            </div>
+            <div class="modal-body" id="modal-content">
+                </div>
+            <div style="margin-top: 24px; text-align: right;">
+                <button class="btn-sm" style="background: #e2e8f0; color: #334155;" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- CONFIGURATION ---
         const WEBHOOKS = {
-            upload: "https://farhan44.app.n8n.cloud/webhook/Upload",
-            email: "https://farhan44.app.n8n.cloud/webhook/SendEmail",
-            call: "https://farhan44.app.n8n.cloud/webhook/Call" 
+            // REPLACE THESE WITH YOUR OWN N8N WEBHOOK URLs
+            upload: "https://your-n8n-instance.com/webhook/Upload",
+            update: "https://your-n8n-instance.com/webhook/update-lead",
+            get_email_leads: "https://your-n8n-instance.com/webhook/GetEmailLeads", 
+            send_email: "https://your-n8n-instance.com/webhook/SendEmail", 
+            get_call_leads: "https://your-n8n-instance.com/webhook/GetCallLeads", 
+            make_call: "https://your-n8n-instance.com/webhook/MakeCall" 
         };
 
-        let session = { sheetId: null, tabName: "Sheet1", stats: {} };
+        // GLOBAL STORE
+        let session = { campaignId: null, badLeads: [], emailLeads: [], callLeads: [], fixedCount: 0 };
+        // Chart Instances
+        let emailChartInstance = null;
+        let callChartInstance = null;
 
         async function handleUpload() {
             const btn = document.getElementById('uploadBtn');
@@ -269,19 +439,13 @@
             const nameInput = document.getElementById('clientName');
             const fileInput = document.getElementById('leadFile');
 
-            if (!nameInput.value || fileInput.files.length === 0) {
-                alert("Please enter a client name and select a CSV file.");
-                return;
-            }
+            if (!nameInput.value || fileInput.files.length === 0) return alert("Missing info");
 
-            // Update Profile UI
             document.getElementById('profile-name').innerText = nameInput.value;
             document.getElementById('profile-icon').innerText = nameInput.value.charAt(0).toUpperCase();
-
             btn.disabled = true;
-            btn.innerHTML = "Processing Data...";
-            status.innerText = "Analyzing CSV...";
-            status.style.color = "#64748b";
+            btn.innerHTML = "Processing...";
+            status.innerText = "Uploading & Creating Database...";
             
             const formData = new FormData();
             formData.append('client_name', nameInput.value);
@@ -293,179 +457,472 @@
                     const rawData = await response.json();
                     const data = Array.isArray(rawData) ? rawData[0] : rawData;
                     
-                    session.sheetId = data.sheet_id || data.spreadsheetId || (data.stats && data.stats.sheet_id);
-                    session.tabName = data.tab_name || "Sheet1";
+                    session.campaignId = data.campaign_id;
+                    const stats = data.stats || {};
+                    session.badLeads = data.review_leads || [];
+
+                    // Stats
+                    document.getElementById('stat-total').innerText = (stats.email_leads + stats.phone_leads + stats.missing_data) || 0;
+                    document.getElementById('stat-email').innerText = stats.email_leads || 0;
+                    document.getElementById('stat-phone').innerText = stats.phone_leads || 0;
+                    document.getElementById('stat-review').innerText = stats.missing_data || 0;
                     
-                    if (!session.sheetId) { throw new Error("Missing sheet_id"); }
-
-                    const stats = data.stats || data;
-
-                    // Update UI Stats
-                    document.getElementById('stat-total').innerText = stats.total_leads || 0;
-                    document.getElementById('stat-email').innerText = stats.email_count || 0;
-                    document.getElementById('stat-phone').innerText = stats.phone_count || 0;
-                    document.getElementById('stat-review').innerText = stats.review_count || 0;
-
-                    document.getElementById('email-total').innerText = stats.email_count || 0;
-                    document.getElementById('email-pending').innerText = stats.email_count || 0;
-                    document.getElementById('call-total').innerText = stats.phone_count || 0;
-                    document.getElementById('call-pending').innerText = stats.phone_count || 0;
-
-                    // --- POPULATE REVIEW TABLE ---
-                    const reviewLeads = data.review_leads || [];
-                    const tableArea = document.getElementById('review-table-area');
-                    const tableBody = document.getElementById('review-table-body');
-                    
-                    tableBody.innerHTML = ""; // Clear old data
-
-                    if (reviewLeads.length > 0) {
-                        tableArea.style.display = 'block';
-                        reviewLeads.forEach(lead => {
-                            const row = `
-                                <tr>
-                                    <td>${lead.uid || '--'}</td>
-                                    <td><strong>${lead.name || 'N/A'} ${lead.lastName || ''}</strong></td>
-                                    <td>${lead.company || 'N/A'}</td>
-                                    <td><span class="status-badge badge-warning">${lead.reason}</span></td>
-                                    <td style="color: #64748b; font-size: 12px;">Update in Google Sheet</td>
-                                </tr>
-                            `;
-                            tableBody.innerHTML += row;
-                        });
-                    } else {
-                        tableArea.style.display = 'none';
-                    }
+                    document.getElementById('clean-missing').innerText = stats.missing_data || 0;
+                    document.getElementById('clean-fixed').innerText = 0;
 
                     // Unlock Tabs
                     document.getElementById('stats-area').style.display = 'grid';
-                    document.getElementById('nav-email').classList.remove('locked');
-                    document.getElementById('nav-call').classList.remove('locked');
-                    document.getElementById('nav-email').classList.add('unlocked');
-                    document.getElementById('nav-call').classList.add('unlocked');
+                    document.querySelectorAll('.menu-item').forEach(el => {
+                        el.classList.remove('locked');
+                        el.classList.add('unlocked');
+                    });
 
-                    status.innerText = "Data Processed Successfully";
+                    status.innerText = "Done! Campaign Created.";
                     status.style.color = "var(--success)";
                     btn.innerHTML = "Upload New List";
                     btn.disabled = false;
-                } else { throw new Error("Upload failed"); }
+                }
             } catch (error) {
                 console.error(error);
                 status.innerText = "Error: " + error.message;
-                status.style.color = "#ef4444";
                 btn.disabled = false;
-                btn.innerHTML = "Retry Upload";
             }
         }
 
-        async function triggerWorkflow(type) {
-            if (!session.sheetId) { alert("No active database."); return; }
-            const endpoint = WEBHOOKS[type];
-            const btn = document.getElementById(type === 'email' ? 'btn-email-trigger' : 'btn-call-trigger');
-            const status = document.getElementById(type + 'Status');
+        // --- DATA CLEANING LOGIC ---
+        function loadBadLeads() {
+            const tableBody = document.getElementById('review-table-body');
+            const leads = session.badLeads;
+
+            if (leads.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 32px;">🎉 No incomplete leads found! Great data quality.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = ""; 
             
-            let totalLeads = 0;
-            if (type === 'email') totalLeads = parseInt(document.getElementById('email-total').innerText) || 0;
-            else totalLeads = parseInt(document.getElementById('call-total').innerText) || 0;
+            leads.forEach((lead, index) => {
+                const hasId = lead.id !== undefined && lead.id !== null;
+                const btnState = hasId ? '' : 'disabled';
+                const btnText = hasId ? 'Save' : 'No ID';
+
+                const row = `
+                    <tr id="row-${index}">
+                        <td><strong>${lead.name}</strong></td>
+                        <td><input type="text" class="edit-input email-input" id="email-${index}" placeholder="Email Address" value="${lead.email || ''}"></td>
+                        <td><input type="text" class="edit-input" id="phone-${index}" placeholder="Phone" value="${lead.phone || ''}"></td>
+                        <td><input type="text" class="edit-input" id="company-${index}" placeholder="Company" value="${lead.company_name || ''}"></td>
+                        <td><input type="text" class="edit-input" id="job-${index}" placeholder="Job Title" value="${lead.job_title || ''}"></td>
+                        <td><input type="text" class="edit-input" id="website-${index}" placeholder="Website" value="${lead.website || ''}"></td>
+                        <td><input type="text" class="edit-input" id="linkedin-${index}" placeholder="LinkedIn" value="${lead.linkedin_url || ''}"></td>
+                        <td>
+                            <button class="btn-sm" ${btnState} onclick="saveLead('${index}', '${lead.id}')" id="btn-${index}">${btnText}</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            document.getElementById('loadLeadsBtn').innerText = "Refresh List";
+            document.getElementById('loadLeadsBtn').disabled = false;
+        }
+
+        async function saveLead(index, id) {
+            const btn = document.getElementById(`btn-${index}`);
+            const payload = {
+                id: id,
+                email: document.getElementById(`email-${index}`).value,
+                phone: document.getElementById(`phone-${index}`).value,
+                company_name: document.getElementById(`company-${index}`).value,
+                job_title: document.getElementById(`job-${index}`).value,
+                website: document.getElementById(`website-${index}`).value,
+                linkedin_url: document.getElementById(`linkedin-${index}`).value
+            };
 
             btn.disabled = true;
-            btn.innerHTML = "Processing Workflow...";
-            status.innerText = "Running Automation...";
+            btn.innerText = "Saving...";
+
+            try {
+                const response = await fetch(WEBHOOKS.update, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    btn.innerText = "Saved";
+                    btn.style.background = "var(--success)";
+                    session.fixedCount++;
+                    document.getElementById('clean-fixed').innerText = session.fixedCount;
+                    let currentMissing = parseInt(document.getElementById('clean-missing').innerText);
+                    if (currentMissing > 0) {
+                        document.getElementById('clean-missing').innerText = currentMissing - 1;
+                        document.getElementById('stat-review').innerText = currentMissing - 1; 
+                    }
+                    document.getElementById(`row-${index}`).style.opacity = '0.6';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerText = "Update Again";
+                        btn.style.background = "var(--accent)";
+                        document.getElementById(`row-${index}`).style.opacity = '1';
+                    }, 2000);
+                } else { throw new Error("Update failed"); }
+            } catch (error) {
+                btn.innerText = "Error";
+                btn.style.background = "var(--danger)";
+                btn.disabled = false;
+            }
+        }
+
+        // --- EMAIL LOGIC ---
+        async function fetchEmailLeads() {
+            if (!session.campaignId) return;
+            const tableBody = document.getElementById('email-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">Fetching latest data...</td></tr>`;
+
+            try {
+                const response = await fetch(WEBHOOKS.get_email_leads, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ campaign_id: session.campaignId })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.stats || {};
+                    const leads = data.leads || [];
+                    
+                    document.getElementById('email-view-total').innerText = stats.total || 0;
+                    document.getElementById('email-view-pending').innerText = stats.pending || 0;
+                    document.getElementById('email-view-sent').innerText = stats.sent || 0;
+
+                    // NEW: Update Chart
+                    renderChart('chart-email', [stats.sent, stats.pending], ['#22c55e', '#e2e8f0']);
+
+                    tableBody.innerHTML = "";
+                    if(leads.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;">No leads found.</td></tr>`;
+                        return;
+                    }
+
+                    leads.forEach(lead => {
+                        let statusBadge = lead.email_status === 'sent' 
+                            ? `<span class="status-badge badge-sent">Sent</span>` 
+                            : `<span class="status-badge badge-pending">Pending</span>`;
+                        
+                        let btnDisabled = lead.email_status === 'sent' ? 'disabled' : '';
+                        let btnText = lead.email_status === 'sent' ? 'Sent' : 'Send Email';
+                        let btnStyle = lead.email_status === 'sent' ? 'background: #cbd5e1;' : '';
+
+                        const row = `
+                            <tr id="email-row-${lead.id}">
+                                <td><strong>${lead.first_name || ''} ${lead.last_name || ''}</strong></td>
+                                <td>${lead.email}</td>
+                                <td>${lead.company_name}</td>
+                                <td id="email-status-${lead.id}">${statusBadge}</td>
+                                <td>
+                                    <button class="btn-sm" style="${btnStyle}" ${btnDisabled} onclick="sendIndividualEmail('${lead.id}')" id="btn-email-send-${lead.id}">
+                                        ${btnText}
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                }
+            } catch (error) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Failed to load data.</td></tr>`;
+            }
+        }
+
+        async function sendIndividualEmail(id) {
+            const btn = document.getElementById(`btn-email-send-${id}`);
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Sending...";
+
+            try {
+                const response = await fetch(WEBHOOKS.send_email, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'single', lead_id: id, campaign_id: session.campaignId })
+                });
+
+                if (response.ok) {
+                    btn.innerText = "Sent";
+                    btn.style.background = "#cbd5e1";
+                    document.getElementById(`email-status-${id}`).innerHTML = `<span class="status-badge badge-sent">Sent</span>`;
+                    
+                    let pending = parseInt(document.getElementById('email-view-pending').innerText);
+                    let sent = parseInt(document.getElementById('email-view-sent').innerText);
+                    document.getElementById('email-view-pending').innerText = Math.max(0, pending - 1);
+                    document.getElementById('email-view-sent').innerText = sent + 1;
+                } else { throw new Error("Failed"); }
+            } catch (error) {
+                alert("Failed to send email");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        async function sendBulkEmails() {
+            const btn = document.getElementById('btn-email-bulk');
+            const status = document.getElementById('emailStatus');
+            const batchSize = document.getElementById('email-bulk-size').value;
+
+            btn.disabled = true;
+            btn.innerHTML = "Processing Batch...";
+            status.innerText = "AI Agent is working...";
             status.style.color = "#64748b";
 
             try {
-                const response = await fetch(endpoint, {
+                const response = await fetch(WEBHOOKS.send_email, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sheet_id: session.sheetId, tab_name: session.tabName, action: type })
+                    body: JSON.stringify({ action: 'bulk', batch_size: batchSize, campaign_id: session.campaignId })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const processedCount = data.processed || 0;
+                    
+                    if (processedCount > 0) {
+                        status.innerText = `Success! Sent ${processedCount} emails.`;
+                        status.style.color = "var(--success)";
+                        setTimeout(fetchEmailLeads, 1000); // Auto refresh
+                    } else {
+                        status.innerText = "No pending leads found to email.";
+                        status.style.color = "var(--warning)";
+                    }
+                } else { throw new Error("Batch failed"); }
+            } catch (error) {
+                status.innerText = "Connection Error";
+                status.style.color = "var(--danger)";
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = "Send Bulk Email";
+                }, 2000);
+            }
+        }
+
+        // --- CALL LOGIC (NEW) ---
+        async function fetchCallLeads() {
+            if (!session.campaignId) return;
+            const tableBody = document.getElementById('call-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">Fetching latest data...</td></tr>`;
+
+            try {
+                const response = await fetch(WEBHOOKS.get_call_leads, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ campaign_id: session.campaignId })
                 });
 
                 if (response.ok) {
                     const rawData = await response.json();
                     const data = Array.isArray(rawData) ? rawData[0] : rawData;
-                    const newStats = data.stats || {};
                     
-                    if (type === 'email') {
-                        // Email Logic
-                        const sent = newStats.email_sent !== undefined ? newStats.email_sent : (parseInt(document.getElementById('email-sent').innerText) + 1);
-                        const pending = newStats.email_pending !== undefined ? newStats.email_pending : (totalLeads - sent);
-                        
-                        document.getElementById('email-sent').innerText = sent;
-                        document.getElementById('email-pending').innerText = pending;
-                        status.innerText = `Email Sent Successfully (${pending} remaining)`;
+                    const stats = data.stats || {};
+                    const leads = data.leads || [];
+                    
+                    session.callLeads = leads; // Store for Modal
 
-                        // --- TABLE UPDATE LOGIC (Email) ---
-                        const pendingEmails = data.pending_emails || [];
-                        const tableArea = document.getElementById('pending-email-table-area');
-                        const tableBody = document.getElementById('pending-email-table-body');
-                        
-                        tableBody.innerHTML = "";
-                        if (pendingEmails.length > 0) {
-                            tableArea.style.display = 'block';
-                            pendingEmails.forEach(lead => {
-                                const row = `
-                                    <tr>
-                                        <td><strong>${lead.name || 'N/A'}</strong></td>
-                                        <td>${lead.company || 'N/A'}</td>
-                                        <td>${lead.email || 'N/A'}</td>
-                                        <td><span class="status-badge badge-ready">Ready</span></td>
-                                    </tr>
-                                `;
-                                tableBody.innerHTML += row;
-                            });
-                        } else { tableArea.style.display = 'none'; }
+                    document.getElementById('call-view-total').innerText = stats.total || 0;
+                    document.getElementById('call-view-pending').innerText = stats.pending || 0;
+                    document.getElementById('call-view-sent').innerText = stats.called || 0;
 
-                    } else {
-                        // Call Logic
-                        const sent = newStats.call_sent !== undefined ? newStats.call_sent : (parseInt(document.getElementById('call-sent').innerText) + 1);
-                        const pending = newStats.call_pending !== undefined ? newStats.call_pending : (totalLeads - sent);
-                        
-                        document.getElementById('call-sent').innerText = sent;
-                        document.getElementById('call-pending').innerText = pending;
-                        status.innerText = `Call Initiated Successfully (${pending} remaining)`;
+                    // NEW: Update Chart
+                    renderChart('chart-call', [stats.called, stats.pending], ['#0ea5e9', '#e2e8f0']);
 
-                        // --- TABLE UPDATE LOGIC (Call) ---
-                        const pendingCalls = data.pending_calls || [];
-                        const tableArea = document.getElementById('pending-call-table-area');
-                        const tableBody = document.getElementById('pending-call-table-body');
-
-                        tableBody.innerHTML = "";
-                        if (pendingCalls.length > 0) {
-                            tableArea.style.display = 'block';
-                            pendingCalls.forEach(lead => {
-                                const row = `
-                                    <tr>
-                                        <td><strong>${lead.name || 'N/A'}</strong></td>
-                                        <td>${lead.company || 'N/A'}</td>
-                                        <td>${lead.phone || 'N/A'}</td>
-                                        <td><span class="status-badge badge-warning">Queue</span></td>
-                                    </tr>
-                                `;
-                                tableBody.innerHTML += row;
-                            });
-                        } else { tableArea.style.display = 'none'; }
+                    tableBody.innerHTML = "";
+                    if(leads.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;">No leads with phones found.</td></tr>`;
+                        return;
                     }
-                    
-                    status.style.color = "var(--success)";
-                    btn.disabled = false;
-                    btn.innerHTML = type === 'email' ? "Send Next Email" : "Dial Next Number";
 
-                } else { throw new Error("Workflow Error"); }
+                    leads.forEach(lead => {
+                        let isCalled = lead.call_status === 'called' || lead.call_status === 'completed';
+                        let hasTranscript = lead.call_transcript && lead.call_transcript.length > 5;
+
+                        let statusBadge = isCalled 
+                            ? `<span class="status-badge badge-called">Called</span>` 
+                            : `<span class="status-badge badge-pending">Pending</span>`;
+                        
+                        let btnDisabled = isCalled ? 'disabled' : '';
+                        let btnText = isCalled ? 'Dialed' : 'Dial Now';
+                        let btnStyle = isCalled ? 'background: #cbd5e1; color: white;' : '';
+
+                        // VIEW RESULT BUTTON
+                        let viewBtn = hasTranscript 
+                            ? `<button class="btn-sm" style="background: white; border: 1px solid var(--border); color: var(--text-primary); margin-left: 8px;" onclick="openModal('${lead.id}')">📄 Result</button>` 
+                            : ``;
+
+                        const row = `
+                            <tr id="call-row-${lead.id}">
+                                <td><strong>${lead.first_name || ''} ${lead.last_name || ''}</strong></td>
+                                <td>${lead.phone}</td>
+                                <td>${lead.company_name}</td>
+                                <td id="call-status-${lead.id}">${statusBadge}</td>
+                                <td style="display: flex; align-items: center;">
+                                    <button class="btn-sm btn-danger" style="${btnStyle}" ${btnDisabled} onclick="makeIndividualCall('${lead.id}')" id="btn-call-send-${lead.id}">
+                                        ${btnText}
+                                    </button>
+                                    ${viewBtn}
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                }
             } catch (error) {
                 console.error(error);
-                status.innerText = "Connection Error";
-                status.style.color = "#ef4444";
-                btn.disabled = false;
-                btn.innerHTML = "Retry";
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Failed to load data.</td></tr>`;
             }
         }
-        
+
+        async function makeIndividualCall(id) {
+            const btn = document.getElementById(`btn-call-send-${id}`);
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Dialing...";
+
+            try {
+                const response = await fetch(WEBHOOKS.make_call, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'single', lead_id: id, campaign_id: session.campaignId })
+                });
+
+                if (response.ok) {
+                    btn.innerText = "Dialed";
+                    btn.style.background = "#cbd5e1";
+                    document.getElementById(`call-status-${id}`).innerHTML = `<span class="status-badge badge-called">Called</span>`;
+                    
+                    let pending = parseInt(document.getElementById('call-view-pending').innerText);
+                    let called = parseInt(document.getElementById('call-view-sent').innerText);
+                    document.getElementById('call-view-pending').innerText = Math.max(0, pending - 1);
+                    document.getElementById('call-view-sent').innerText = called + 1;
+                } else { throw new Error("Failed"); }
+            } catch (error) {
+                alert("Failed to initiate call");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        async function sendBulkCalls() {
+            const btn = document.getElementById('btn-call-bulk');
+            const status = document.getElementById('callStatus');
+            const batchSize = document.getElementById('call-bulk-size').value;
+
+            btn.disabled = true;
+            btn.innerHTML = "Processing Batch...";
+            status.innerText = "Connecting to Voice Agent...";
+            status.style.color = "#64748b";
+
+            try {
+                const response = await fetch(WEBHOOKS.make_call, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'bulk', batch_size: batchSize, campaign_id: session.campaignId })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const processedCount = data.processed || 0;
+
+                    if (processedCount > 0) {
+                        status.innerText = `Success! Dialing ${processedCount} leads.`;
+                        status.style.color = "var(--success)";
+                        setTimeout(fetchCallLeads, 2000); // Auto Refresh
+                    } else {
+                        status.innerText = "No pending phones found.";
+                        status.style.color = "var(--warning)";
+                    }
+                } else { throw new Error("Batch failed"); }
+            } catch (error) {
+                status.innerText = "Connection Error";
+                status.style.color = "var(--danger)";
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = "Start Bulk Dialer";
+                }, 2000);
+            }
+        }
+
+        // --- MODAL LOGIC ---
+        function openModal(id) {
+            const lead = session.callLeads.find(l => l.id == id);
+            if (!lead) return;
+
+            document.getElementById('modal-title').innerText = `Call Result: ${lead.first_name} ${lead.last_name}`;
+            document.getElementById('modal-content').innerHTML = `
+                <div class="summary-box">
+                    <strong>📊 AI Summary:</strong><br>
+                    ${lead.call_summary || "No summary provided."}
+                </div>
+                <strong>📝 Full Transcript:</strong><br><br>
+                ${lead.call_transcript || "No transcript available."}
+            `;
+            
+            document.getElementById('transcript-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('transcript-modal').style.display = 'none';
+        }
+
+        // --- NAVIGATION ---
         function switchView(viewName) {
             const navItem = document.getElementById('nav-' + viewName);
             if (navItem.classList.contains('locked')) return; 
+            
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             navItem.classList.add('active');
+            
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewName).classList.add('active');
+
+            if (viewName === 'data' && document.getElementById('review-table-body').children[0].innerText.includes('Load Incomplete Leads')) {
+                loadBadLeads();
+            }
+            if (viewName === 'email') fetchEmailLeads();
+            if (viewName === 'call') fetchCallLeads();
+        }
+
+        // --- NEW: CHART HELPER FUNCTION ---
+        function renderChart(canvasId, data, colors) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Destroy previous instance to allow updating
+            let chartInstance = canvasId === 'chart-email' ? emailChartInstance : callChartInstance;
+            if (chartInstance) chartInstance.destroy();
+
+            const newChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Save instance globally
+            if (canvasId === 'chart-email') emailChartInstance = newChart;
+            else callChartInstance = newChart;
         }
     </script>
 </body>
