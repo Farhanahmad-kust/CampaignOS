@@ -101,7 +101,7 @@ We have prepared a detailed breakdown of the Operational Costs (OpEx) and Develo
 ### Installation
 1.  **Clone the Repo:**
     ```bash
-    git clone [https://github.com/yourusername/CampaignOS.git](https://github.com/yourusername/CampaignOS.git)
+   https://github.com/Farhanahmad-kust/CampaignOS
     ```
 2.  **Import Workflows:**
     * Import the `.json` workflow files located in the `/workflows` folder into your n8n instance.
