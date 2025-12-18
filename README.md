@@ -68,8 +68,6 @@ This project was a collaborative effort combining technical implementation with 
 * **Farhan Ahmad (Lead Developer):**
     * Role: Full Stack Development, Architecture, & Deployment.
     * Contribution: Built all 6 n8n workflows, designed the Supabase schema, coded the frontend dashboard, and integrated the AI agents (Vapi/OpenAI).
-* **Basit Ali:**
-    * Role: Technical Team Member.
 * **Nahida Ali:**
     * Role: Freelance Associate.
     * Contribution: Project strategy and use-case definition.
