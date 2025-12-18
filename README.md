@@ -81,7 +81,7 @@ This project was a collaborative effort combining technical implementation with 
 
 We have prepared a detailed breakdown of the Operational Costs (OpEx) and Development Value (CapEx) for this system.
 
-📄 **[View Full Cost Estimation Document](./COST_ESTIMATION.md)**
+📄 **[View Full Cost Estimation Document](Cost Estimation)**
 
 **Quick Summary:**
 * **Fixed Monthly Cost:** ~$31.15 (n8n + Twilio)
