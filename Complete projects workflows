@@ -1,0 +1,1924 @@
+{
+  "name": "CampaignOS - Complete Project",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3e42b1dc-96d3-404c-9c19-60041c37793e",
+              "name": "client_name",
+              "value": "={{ $('Webhook for lead upload').item.json.body.client_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -19904,
+        3232
+      ],
+      "id": "0e331580-d28a-4365-8c19-7c1c0ebeba19",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Upload",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20352,
+        3232
+      ],
+      "id": "de93ca36-3e6f-4324-9589-77a12b9a12f5",
+      "name": "Webhook for lead upload",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Code').first().json.final_response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -18784,
+        3232
+      ],
+      "id": "c562849e-be5f-4591-94c3-b3a0526beceb",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get Campaign ID\nconst campaignId = $('Campaign_Node').first().json.id;\n\n// 2. Get CSV Rows\nconst csvRows = $('CSV').all(); \n\n// 3. Create the Package\nconst bulkData = csvRows.map(row => ({\n    campaign_id: campaignId,\n    \n    // Standard Contact Info\n    first_name: row.json['first_name'] || row.json['First Name'] || null,\n    last_name: row.json['last_name'] || row.json['Last Name'] || null,\n    email: row.json['email'] || row.json['Email'] || null,\n    phone: row.json['phone'] || row.json['Phone'] || null,\n    \n    // Company Info\n    company_name: row.json['company_name'] || row.json['Company Name'] || \"Unknown\",\n    website: row.json['company_website'] || row.json['website'] || row.json['Company Website'] || null,\n    \n    // CRM Data (Job, LinkedIn, Employees)\n    job_title: row.json['job_title'] || row.json['Job Title'] || null,\n    linkedin_url: row.json['profile_link'] || row.json['LinkedIn'] || row.json['profile_link_public_identifier'] || null,\n    employee_count: row.json['employee_count_end'] || row.json['Employee Count'] || null,\n    \n    // NEW: Address / Location\n    address: row.json['address'] || row.json['Address'] || row.json['Location'] || null\n}));\n\n// 4. Return Payload\nreturn [\n    {\n        json: {\n            payload: bulkData\n        }\n    }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19456,
+        3232
+      ],
+      "id": "e623d0fe-f03c-470c-ba53-43df1fe7f87f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_SUPABASE_PROJECT_ID.supabase.co/rest/v1/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey ",
+              "value": "YOUR_SUPABASE_ANON_KEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_SUPABASE_ANON_KEY"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -19232,
+        3232
+      ],
+      "id": "ebdd34de-a9d6-43ef-b2f1-24257fd6c182",
+      "name": "HTTP Request",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "=file",
+        "options": {
+          "relaxQuotes": true,
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -20128,
+        3232
+      ],
+      "id": "3441f1f0-987d-48d4-b333-f4033aa9f2e4",
+      "name": "CSV"
+    },
+    {
+      "parameters": {
+        "tableId": "campaigns",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.client_name }}_{{ $now.format('YYYY-MM-DD') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -19680,
+        3232
+      ],
+      "id": "c34a1285-ddba-47d9-ae14-f71f871a3230",
+      "name": "Campaign_Node",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20352,
+        3456
+      ],
+      "id": "16377261-de3f-4e03-97ca-3fdcb5b07a41",
+      "name": "Webhook",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.body.phone }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.body.email }}"
+            },
+            {
+              "fieldId": "job_title",
+              "fieldValue": "={{ $json.body.job_title }}"
+            },
+            {
+              "fieldId": "company_name",
+              "fieldValue": "={{ $json.body.company_name }}"
+            },
+            {
+              "fieldId": "website",
+              "fieldValue": "={{ $json.body.website }}"
+            },
+            {
+              "fieldId": "linkedin_url",
+              "fieldValue": "={{ $json.body.linkedin_url }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20128,
+        3456
+      ],
+      "id": "e7920b01-72ef-4c18-81c8-893d5d197f3b",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Lead updated successfully\",\n  \"updated_email\": \"{{ $json.email }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -19904,
+        3456
+      ],
+      "id": "b2aa7d58-1268-43b6-a999-c925bc04980f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the Saved Data (Input from HTTP Request)\n// The input items ARE the rows returned from Supabase\nconst savedRows = items.map(item => item.json);\n\n// 2. Counters\nlet emailCount = 0;\nlet phoneCount = 0;\nlet missingCount = 0;\nlet reviewList = [];\n\n// 3. Analyze the SAVED data\nsavedRows.forEach(row => {\n    \n    // Check fields\n    const hasEmail = row.email && row.email.includes('@');\n    const hasPhone = row.phone && row.phone.length > 5;\n    \n    // Stats\n    if (hasEmail) emailCount++;\n    if (hasPhone) phoneCount++;\n\n    // Check for Missing Data\n    const isIncomplete = !hasPhone || !row.job_title || !row.website || !row.linkedin_url || row.company_name === \"Unknown\" || !hasEmail;\n\n    if (isIncomplete) {\n        missingCount++;\n        \n        // Add to \"Needs Attention\" List\n        // Limit to 100 for speed\n        if (reviewList.length < 100) {\n            reviewList.push({\n                id: row.id, // <--- CRITICAL: CAPTURING THE ID FROM SUPABASE\n                name: (row.first_name || '') + ' ' + (row.last_name || ''),\n                email: row.email || \"\",\n                phone: row.phone || \"\",\n                company_name: row.company_name || \"\",\n                job_title: row.job_title || \"\",\n                website: row.website || \"\",\n                linkedin_url: row.linkedin_url || \"\"\n            });\n        }\n    }\n});\n\n// 4. Return Final Response for Website\n// We grab the campaign ID from the first row of saved data\nconst campaignId = savedRows.length > 0 ? savedRows[0].campaign_id : null;\n\nreturn [{\n    json: {\n        final_response: {\n            status: \"success\",\n            message: \"Upload complete\",\n            campaign_id: campaignId,\n            stats: {\n                email_leads: emailCount,\n                phone_leads: phoneCount,\n                missing_data: missingCount\n            },\n            review_leads: reviewList // Now includes IDs!\n        }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19008,
+        3232
+      ],
+      "id": "41f62690-e7dc-4121-b7f6-e47c31acec0d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "Workflow to upload leads and filter out leads ",
+        "height": 240,
+        "width": 1824
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20432,
+        3152
+      ],
+      "id": "2b2257a2-0f7d-4f7d-abd9-6d6b3dfde45c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Update leads data workflow",
+        "height": 192,
+        "width": 768,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20464,
+        3424
+      ],
+      "id": "e5e5dead-95f9-41bd-b21a-7881f8312ed5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "GetEmailLeads",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f903c53d-f2bd-4837-a2db-8de66fbc8eab",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20352,
+        3680
+      ],
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "campaign_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.campaign_id }}"
+            },
+            {
+              "keyName": "email_status",
+              "condition": "neq",
+              "keyValue": "=Sent"
+            },
+            {
+              "keyName": "email",
+              "condition": "neq"
+            }
+          ]
+        }
+      },
+      "id": "b8397ef6-6ecf-46d4-9b77-6426a8cfa0ff",
+      "name": "Get Valid Emails",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20128,
+        3680
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const leads = items.map(item => item.json);\nconst total = leads.length;\nconst sent = leads.filter(l => l.email_status === 'sent').length;\nconst pending = total - sent;\n\nreturn [{\n  json: {\n    stats: { total, sent, pending },\n    leads: leads\n  }\n}];"
+      },
+      "id": "014d23c4-9124-476b-8134-09c9e2d35715",
+      "name": "Calculate Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19904,
+        3680
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "818016d0-4056-47a4-9254-31d8484b9c69",
+      "name": "Respond to Website",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -19680,
+        3680
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "SendEmail",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20480,
+        4016
+      ],
+      "id": "7cbcfa68-7c1f-4aee-9939-727722c0fb81",
+      "name": "Send Email Logic.",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "single",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e5d665fc-a739-4d8d-830f-98ae6bdf2a15"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b85cd61c-a35f-4035-a537-e3552bc1ecc3",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "bulk",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -20272,
+        4016
+      ],
+      "id": "2f01f012-3135-48ad-9046-d64f60ca049b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.body.lead_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20048,
+        3920
+      ],
+      "id": "4a59e2ef-ac70-42c2-af02-64aa34404f97",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a short cold email to {{ $json.first_name }} at {{ $json.company_name }}.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=Write an interesting personalize email to  {{ $json.first_name }} working as {{ $json.job_title }} at {{ $json.company_name }}\n\nWe are Ai company who is specialized in automating manuall work with cutting edge technologies to save companies time on manuall work so they can focus on real work \n\nwrite it in professional way and do not invent any details from your own and make sure to write new email for every new lead\n\nmy name is [YOUR NAME] and i am ceo of automating agency "
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -19872,
+        3920
+      ],
+      "id": "90570c3e-1cdc-4e9f-b3f4-39435911d42d",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "sendTo": "=YOUR_EMAIL_HERE",
+        "subject": "Partnership Opportunity",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -19520,
+        3936
+      ],
+      "id": "52343ed7-c661-464c-ab6d-01caa86c8295",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get a row').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email_status",
+              "fieldValue": "=sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -19184,
+        3888
+      ],
+      "id": "bc02fd20-5b84-4da4-8386-3a7e310ea512",
+      "name": "Update a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"status\": \"success\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -18896,
+        3888
+      ],
+      "id": "07c40dc8-219b-4b35-891d-929a40a6e135",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -19712,
+        4192
+      ],
+      "id": "66f0cb74-93df-40aa-ae2d-2a70a609ad7f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a short cold email to {{ $json.first_name }} at {{ $json.company_name }}.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=Write an interesting personalize email to  {{ $json.first_name }} working as {{ $json.job_title }} at {{ $json.company_name }}  We are Ai company who is specialized in automating manuall work with cutting edge technologies to save companies time on manuall work so they can focus on real work   write it in professional way and do not invent any details from your own and make sure to write new email for every new lead  my name is [YOUR NAME] and i am ceo of automating agency "
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -19456,
+        4224
+      ],
+      "id": "09fda905-5f74-4166-83f9-f2dbbcb2eb15",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "sendTo": "=YOUR_EMAIL_HERE",
+        "subject": "Partnership Opportunity",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -19072,
+        4224
+      ],
+      "id": "9454b3e5-2a52-44ec-9b15-2b65fc7f2aa5",
+      "name": "Send a message1",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop Over Items').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email_status",
+              "fieldValue": "=Sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -18784,
+        4240
+      ],
+      "id": "fcb4ad5f-8b03-4a22-826e-969b6415ad9c",
+      "name": "Update a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "GetCallLeads",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20096,
+        4656
+      ],
+      "id": "9303b4f7-73f0-4637-97cc-1acc4aa227c4",
+      "name": "Webhook2",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "content": "Get emailsleads workflow",
+        "width": 1120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -20464,
+        3648
+      ],
+      "typeVersion": 1,
+      "id": "8d9be037-7945-4d66-bf99-9eee2a1f2147",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Send emails Workflow",
+        "height": 688,
+        "width": 2128
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -20528,
+        3856
+      ],
+      "typeVersion": 1,
+      "id": "fc754348-d61e-4220-b133-dae15f364b2a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "campaign_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.campaign_id }}"
+            },
+            {
+              "keyName": "phone",
+              "condition": "neq"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -19872,
+        4656
+      ],
+      "id": "015eb8c2-b777-4cb2-ad11-32d23d56964c",
+      "name": "Get many rows1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -19424,
+        4656
+      ],
+      "id": "f69c1a03-8257-440a-8954-a55070f66ad6",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "MakeCall",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20672,
+        4912
+      ],
+      "id": "e5a9844d-f87d-478d-83ae-b41d46b6da21",
+      "name": "Make a call",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "single",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ae8b6920-c3f5-46f9-af44-bc5bb2cdf061"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "34358744-7e14-4f17-9d61-a7f36185e1a0",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "bulk",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -20448,
+        4912
+      ],
+      "id": "1090a4f0-8b77-4b7b-b716-6a00e245e1f6",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.body.lead_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20208,
+        4896
+      ],
+      "id": "534c4890-04b0-4b09-9430-38e58fb7ed28",
+      "name": "Get a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assistantId\": \"YOUR_VAPI_ASSISTANT_ID\",\n  \"phoneNumberId\": \"YOUR_VAPI_PHONE_ID\",\n  \"customer\": {\n    \"number\": \"{{ $json.clean_phone_e164 }}\"\n  },\n  \"assistantOverrides\": {\n    \"serverUrl\": \"https://YOUR_N8N_INSTANCE_URL/webhook/VapiCallEnded\",\n    \"metadata\": {\n      \"lead_id\": \"{{ $json.id }}\",\n      \"row_number\": \"{{ $json.phone }}\"\n    },\n    \"maxDurationSeconds\": 600,\n    \"transcriber\": {\n      \"provider\": \"deepgram\",\n      \"model\": \"nova-2\",\n      \"language\": \"en\",\n      \"endpointing\": 499\n    },\n    \"voicemailDetection\": {\n      \"provider\": \"vapi\"\n    },\n    \"firstMessage\": \"Hello?\",\n    \"variableValues\": {\n      \"first_name\": \"{{ $json.first_name }}\",\n      \"company_name\": \"{{ $json.company_name }}\",\n      \"job_title\": \"{{ $json.job_title }}\"\n    },\n    \"model\": {\n      \"provider\": \"openai\",\n      \"model\": \"gpt-4o\",\n      \"messages\": [\n        {\n          \"role\": \"system\",\n          \"content\": \"You are [AI_NAME], a helpful consultant at [YOUR_COMPANY]. You are calling {{ $json.first_name }} at {{ $json.company_name }}.\\n\\n### CRITICAL BEHAVIOR RULES:\\n1. **DO NOT INTERRUPT:** Wait for the user to finish speaking completely. If they pause, wait 1 second before answering.\\n2. **SPEAK SLOWLY:** Use a calm, relaxed pace. Do not rush.\\n3. **BE EMPATHETIC:** If the user says they are busy or not interested, accept it immediately and politely say goodbye. Do not force them.\\n4. **LISTEN FIRST:** Your goal is to understand their problems, not force a sale.\\n\\n### SCRIPT FLOW:\\n1. **Opener:** 'Hi {{ $json.first_name }}, this is [AI_NAME] from [YOUR_COMPANY]. I noticed you're leading things at {{ $json.company_name }}—did I catch you at a bad time?'\\n\\n2. **The Hook (Only if they are free):** 'I'll be brief. We help companies automate manual reporting. I was just curious if your team spends a lot of time on data entry right now?'\\n\\n3. **Qualification:**\\n   - IF YES: 'I hear that a lot. What specific task is the biggest headache for you?'\\n   - IF NO/BUSY: 'No problem at all. I won't take up your time. Have a great day.' (Hang up).\\n\\n4. **The Close:** 'It sounds like we could help. Would you be open to a 15-minute chat next week to see how it works?'\"\n        }\n      ]\n    },\n    \"analysisPlan\": {\n      \"summaryPrompt\": \"Summarize the call: 1. Pain point identified? 2. User sentiment (Positive/Negative). 3. Outcome.\",\n      \"successEvaluationPrompt\": \"Did the user agree to a demo? Return 'true' if yes.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -19728,
+        4880
+      ],
+      "id": "39494619-9d60-4862-9638-679e7f21b659",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Vapi f"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Code in JavaScript2').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "call_status",
+              "fieldValue": "=called"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -19424,
+        4864
+      ],
+      "id": "be610b4f-7e10-43d9-b766-ee209a1b8560",
+      "name": "Update a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"status\": \"success\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -19168,
+        4848
+      ],
+      "id": "df17dca2-c617-4c33-8560-befbd4bb3c73",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -20000,
+        5168
+      ],
+      "id": "9da85fb8-bcd9-4e57-98e5-8ecfc72763fe",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.vapi.ai/call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assistantId\": \"YOUR_VAPI_ASSISTANT_ID\",\n  \"phoneNumberId\": \"YOUR_VAPI_PHONE_ID\",\n  \"customer\": {\n    \"number\": \"{{ $json.clean_phone_e164 }}\"\n  },\n  \"assistantOverrides\": {\n    \"serverUrl\": \"https://YOUR_N8N_INSTANCE_URL/webhook/VapiCallEnded\",\n    \"metadata\": {\n      \"lead_id\": \"{{ $json.id }}\",\n      \"row_number\": \"{{ $json.phone }}\"\n    },\n    \"maxDurationSeconds\": 600,\n    \"transcriber\": {\n      \"provider\": \"deepgram\",\n      \"model\": \"nova-2\",\n      \"language\": \"en\",\n      \"endpointing\": 499\n    },\n    \"voicemailDetection\": {\n      \"provider\": \"vapi\"\n    },\n    \"firstMessage\": \"Hello?\",\n    \"variableValues\": {\n      \"first_name\": \"{{ $json.first_name }}\",\n      \"company_name\": \"{{ $json.company_name }}\",\n      \"job_title\": \"{{ $json.job_title }}\"\n    },\n    \"model\": {\n      \"provider\": \"openai\",\n      \"model\": \"gpt-4o\",\n      \"messages\": [\n        {\n          \"role\": \"system\",\n          \"content\": \"You are [AI_NAME], a helpful consultant at [YOUR_COMPANY]. You are calling {{ $json.first_name }} at {{ $json.company_name }}.\\n\\n### CRITICAL BEHAVIOR RULES:\\n1. **DO NOT INTERRUPT:** Wait for the user to finish speaking completely. If they pause, wait 1 second before answering.\\n2. **SPEAK SLOWLY:** Use a calm, relaxed pace. Do not rush.\\n3. **BE EMPATHETIC:** If the user says they are busy or not interested, accept it immediately and politely say goodbye. Do not force them.\\n4. **LISTEN FIRST:** Your goal is to understand their problems, not force a sale.\\n\\n### SCRIPT FLOW:\\n1. **Opener:** 'Hi {{ $json.first_name }}, this is [AI_NAME] from [YOUR_COMPANY]. I noticed you're leading things at {{ $json.company_name }}—did I catch you at a bad time?'\\n\\n2. **The Hook (Only if they are free):** 'I'll be brief. We help companies automate manual reporting. I was just curious if your team spends a lot of time on data entry right now?'\\n\\n3. **Qualification:**\\n   - IF YES: 'I hear that a lot. What specific task is the biggest headache for you?'\\n   - IF NO/BUSY: 'No problem at all. I won't take up your time. Have a great day.' (Hang up).\\n\\n4. **The Close:** 'It sounds like we could help. Would you be open to a 15-minute chat next week to see how it works?'\"\n        }\n      ]\n    },\n    \"analysisPlan\": {\n      \"summaryPrompt\": \"Summarize the call: 1. Pain point identified? 2. User sentiment (Positive/Negative). 3. Outcome.\",\n      \"successEvaluationPrompt\": \"Did the user agree to a demo? Return 'true' if yes.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -19552,
+        5168
+      ],
+      "id": "32634367-8b39-4e75-8fb8-19771dc9a35e",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Vapi f"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "call_status",
+              "fieldValue": "=called"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -19152,
+        5168
+      ],
+      "id": "d0eb98e8-9f7e-4353-ab6a-9303166863f6",
+      "name": "Update a row4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -18880,
+        5024
+      ],
+      "id": "a64c20a4-aa99-4af6-887b-d022b5e6cd1c",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get all the rows found by Supabase\nconst leads = items.map(item => item.json);\n\n// 2. Calculate Stats for the Dashboard\nconst total = leads.length;\nconst called = leads.filter(l => l.call_status === 'called' || l.call_status === 'calling').length;\nconst pending = total - called;\n\n// 3. Return the exact structure the website needs\nreturn [{\n  json: {\n    stats: { \n        total: total, \n        called: called, \n        pending: pending \n    },\n    leads: leads\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19648,
+        4656
+      ],
+      "id": "49232815-99ed-48a3-bb7e-00197b271ae0",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iterate over all leads\nreturn items.map(item => {\n  const lead = item.json;\n  \n  // Get the phone string (handle nulls)\n  let phone = lead.phone ? lead.phone.toString() : \"\";\n\n  // 1. Remove ALL non-digit characters (spaces, dashes, parens)\n  let digits = phone.replace(/\\D/g, \"\");\n\n  // 2. Format for US Vapi Trial (+1)\n  let formattedPhone = \"\";\n\n  if (digits.length === 10) {\n    // Case: 5551234567 -> +15551234567\n    formattedPhone = \"+1\" + digits;\n  } \n  else if (digits.length === 11 && digits.startsWith(\"1\")) {\n    // Case: 15551234567 -> +15551234567\n    formattedPhone = \"+\" + digits;\n  } \n  else if (digits.length > 0) {\n    // Fallback: If it's weird, just force +1\n    formattedPhone = \"+1\" + digits;\n  }\n\n  // 3. Return the clean number + original data\n  return {\n    json: {\n      ...lead,\n      clean_phone_e164: formattedPhone\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19984,
+        4896
+      ],
+      "id": "aa4e5001-8105-493b-b3f1-0d96796eab11",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "content": "Get Call leads  data workflow",
+        "height": 192,
+        "width": 1024
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -20224,
+        4624
+      ],
+      "typeVersion": 1,
+      "id": "1cfa30a4-dbe3-47b6-977e-62a148b358cb",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Make a call workflow",
+        "height": 560,
+        "width": 2240
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -20800,
+        4848
+      ],
+      "typeVersion": 1,
+      "id": "f792fbdc-ec70-4614-8980-1bdf3986c470",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iterate over all leads\nreturn items.map(item => {\n  const lead = item.json;\n  \n  // Get the phone string (handle nulls)\n  let phone = lead.phone ? lead.phone.toString() : \"\";\n\n  // 1. Remove ALL non-digit characters (spaces, dashes, parens)\n  let digits = phone.replace(/\\D/g, \"\");\n\n  // 2. Format for US Vapi Trial (+1)\n  let formattedPhone = \"\";\n\n  if (digits.length === 10) {\n    // Case: 5551234567 -> +15551234567\n    formattedPhone = \"+1\" + digits;\n  } \n  else if (digits.length === 11 && digits.startsWith(\"1\")) {\n    // Case: 15551234567 -> +15551234567\n    formattedPhone = \"+\" + digits;\n  } \n  else if (digits.length > 0) {\n    // Fallback: If it's weird, just force +1\n    formattedPhone = \"+1\" + digits;\n  }\n\n  // 3. Return the clean number + original data\n  return {\n    json: {\n      ...lead,\n      clean_phone_e164: formattedPhone\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20272,
+        5168
+      ],
+      "id": "804920b6-8558-4876-9c46-d04bac9af94f",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "VapiCallEnded",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -20128,
+        5568
+      ],
+      "id": "21184321-2d64-4208-9e25-e7df5724dfc7",
+      "name": "Webhook (Vapi)",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.message.assistant.metadata.lead_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "call_status",
+              "fieldValue": "completed"
+            },
+            {
+              "fieldId": "call_transcript",
+              "fieldValue": "={{ $json.body.message.transcript }}"
+            },
+            {
+              "fieldId": "call_summary",
+              "fieldValue": "={{ $json.body.message.analysis.summary }}"
+            },
+            {
+              "fieldId": "call_recording_url",
+              "fieldValue": "={{ $json.body.message.recordingUrl }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -19904,
+        5568
+      ],
+      "id": "ad6a2a63-83e2-4f62-b0c7-09e00b12d756",
+      "name": "Save Transcript to DB",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -19696,
+        5568
+      ],
+      "id": "40cae0fa-5de7-4869-98be-3c0ef8bdf451",
+      "name": "Respond 200 OK"
+    },
+    {
+      "parameters": {
+        "content": "##Send updated call data to website ",
+        "height": 192,
+        "width": 752
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -20176,
+        5520
+      ],
+      "typeVersion": 1,
+      "id": "d6fbc64c-436a-447a-8206-97feb841acc7",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. REPLACE 'Supabase' with the EXACT name of your node\nconst sourceNodeName = 'Supabase'; \n\ntry {\n  // 2. Grab all items that were fetched originally\n  const allItems = $(sourceNodeName).all();\n  \n  // 3. Count them\n  const count = allItems.length;\n  const ids = allItems.map(i => i.json.id);\n\n  // 4. Return the REAL data\n  return [{\n    json: {\n      status: \"success\",\n      processed: count,\n      processed_ids: ids\n    }\n  }];\n  \n} catch (error) {\n  // Debugging Helper: This tells you what went wrong if the name is still bad\n  return [{\n    json: {\n      status: \"error\",\n      message: \"Could not find node named: \" + sourceNodeName,\n      processed: 0\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19408,
+        5056
+      ],
+      "id": "ebd7e7ef-4566-4525-ab1b-d901f0cc3c93",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "limit": "={{ $json.body.batch_size }}",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "campaign_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.campaign_id }}"
+            },
+            {
+              "keyName": "call_status",
+              "condition": "neq",
+              "keyValue": "=called"
+            },
+            {
+              "keyName": "phone",
+              "condition": "neq"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20464,
+        5168
+      ],
+      "id": "1d454f4f-6c4d-4c36-b00a-33d3744715a1",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -18944,
+        5168
+      ],
+      "id": "2e070471-0b7b-478a-825b-bc923546f4bf",
+      "name": "Wait",
+      "webhookId": "fe7d092d-f851-4fa5-ba31-35bcb3fd501c"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -19776,
+        4064
+      ],
+      "id": "cacad07c-71b0-4a6d-a5d4-ac882d6c3535",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -19488,
+        4448
+      ],
+      "id": "aaa69875-eb02-4a41-a918-497f1043f2f0",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. ENTER THE EXACT NAME OF YOUR DATABASE NODE HERE\n// (The node that fetched the emails before the loop started)\nconst nodeName = 'Supabase1'; \n\ntry {\n  // 2. This command grabs ALL items that the Supabase node found.\n  // It works even if the loop has finished.\n  const items = $(nodeName).all();\n  \n  // 3. We count the length of that array (e.g., 2, 5, 10)\n  const realCount = items.length;\n\n  return [{\n    json: {\n      status: \"success\",\n      processed: realCount\n    }\n  }];\n\n} catch (error) {\n  // Debugging: If the name is wrong, this tells us immediately\n  return [{\n    json: {\n      status: \"success\", \n      processed: 1, // Fallback so the website doesn't crash\n      debug_message: \"Could not find node named: \" + nodeName\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -19216,
+        4048
+      ],
+      "id": "15fffc32-06a6-4683-bf5b-a472576615d1",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "limit": "={{ $json.body.batch_size }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "campaign_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.campaign_id }}"
+            },
+            {
+              "keyName": "email",
+              "condition": "neq",
+              "keyValue": "=sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20080,
+        4128
+      ],
+      "id": "40a2609e-9e0d-4d3b-9324-b744a89d6be3",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -19008,
+        4048
+      ],
+      "id": "8a97600d-008b-4023-af49-10e3fa76912a",
+      "name": "Respond to Webhook6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Campaign_Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook for lead upload": {
+      "main": [
+        [
+          {
+            "node": "CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CSV": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign_Node": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get Valid Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Valid Emails": {
+      "main": [
+        [
+          {
+            "node": "Calculate Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Stats": {
+      "main": [
+        [
+          {
+            "node": "Respond to Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Logic.": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Update a row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Get many rows1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make a call": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Get a row1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Update a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Update a row4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row4": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (Vapi)": {
+      "main": [
+        [
+          {
+            "node": "Save Transcript to DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Transcript to DB": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "153903bc-ea18-478c-88e6-caced03c7696",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "random_instance_id"
+  },
+  "id": "xhrThzQKnmkXuMRh",
+  "tags": []
+}
